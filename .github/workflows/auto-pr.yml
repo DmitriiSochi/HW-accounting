@@ -1,0 +1,52 @@
+name: Auto Create PR after feature push
+
+on:
+  push:
+    branches: [feature]
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: feature 
+ 
+      - name: Check HTML syntax
+        run: |
+          # Простая проверка: есть ли открывающие и закрывающие теги
+          if grep -q "<html>" index.html && grep -q "</html>" index.html; then
+            echo "HTML синтаксис в порядке"
+          else
+            echo "Проблема с HTML тегами"
+            exit 1
+          fi      - name: Create Pull Request
+        
+      - name: Create pull Request
+        if: success()
+        user: actions/github-script@v7
+          with:
+            script: |
+              const { data: existingPRs } = await github.rest.pulls.list({
+              owner: context.repo.owner,        // Владелец (ты)
+              repo: context.repo.repo,           // Название репозитория
+              state: 'open',                      // Только открытые
+              head: 'feature',                     // Из какой ветки
+              base: 'develop'                          // В какую ветку
+            });
+
+            // 2. Если PR ещё нет - создаём новый
+            if (existingPRs.length === 0) {
+              const newPR = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🤖 Auto PR: develop → main',  // Заголовок
+                body: 'Автоматически созданный PR\n\n' +  // Описание
+                      '✅ Проверки пройдены:\n' +
+                      '- index.html существует',
+                head: 'feature',  // ОТКУДА
+                base: 'develop'       // КУДА
+              });
+

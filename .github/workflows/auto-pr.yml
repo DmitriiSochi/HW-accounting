@@ -12,41 +12,68 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: feature 
+          ref: feature
  
-      - name: Check HTML syntax
+      - name: Check PHP file exists
         run: |
-          # Простая проверка: есть ли открывающие и закрывающие теги
-          if grep -q "<html>" index.html && grep -q "</html>" index.html; then
-            echo "HTML синтаксис в порядке"
-          else
-            echo "Проблема с HTML тегами"
+          # Проверяем наличие index.php
+          if [ ! -f "index.php" ]; then
+            echo "❌ ОШИБКА: Файл index.php не найден!"
+            echo "Содержимое папки:"
+            ls -la
             exit 1
-          fi      
+          fi
+          
+          echo "✅ Файл index.php найден"
+          
+          # Простая проверка PHP синтаксиса
+          if php -l index.php; then
+            echo "✅ PHP синтаксис корректен"
+          else
+            echo "❌ Ошибка в PHP синтаксисе"
+            exit 1
+          fi
         
       - name: Create pull Request
         if: success()
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: existingPRs } = await github.rest.pulls.list({
-              owner: context.repo.owner,        // Владелец (ты)
-              repo: context.repo.repo,           // Название репозитория
-              state: 'open',                      // Только открытые
-              head: 'feature',                     // Из какой ветки
-              base: 'develop'                          // В какую ветку
-            });
-
-            // 2. Если PR ещё нет - создаём новый
-            if (existingPRs.length === 0) {
-              const newPR = await github.rest.pulls.create({
+            try {
+              console.log("🔍 Проверяем существующие PR из feature в develop...");
+              
+              const { data: existingPRs } = await github.rest.pulls.list({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: '🤖 Auto PR: feature → develop',  // Заголовок
-                body: 'Автоматически созданный PR\n\n' +  // Описание
-                      '✅ Проверки пройдены:\n' +
-                      '- index.html существует',
-                head: 'feature',  // ОТКУДА
-                base: 'develop'       // КУДА
-              });  // ← ЗДЕСЬ БЫЛА ОШИБКА! Теперь правильно: });
+                state: 'open',
+                head: 'feature',
+                base: 'develop'
+              });
+              
+              console.log(`📊 Найдено открытых PR: ${existingPRs.length}`);
+              
+              if (existingPRs.length === 0) {
+                console.log("🆕 Создаём новый Pull Request...");
+                
+                const newPR = await github.rest.pulls.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: '🤖 Auto PR: feature → develop',
+                  body: '## Автоматически созданный PR\n\n' +
+                        '### ✅ Проверки пройдены:\n' +
+                        '- index.php существует\n' +
+                        '- PHP синтаксис корректен\n\n' +
+                        '---\n' +
+                        '*Создано автоматически GitHub Actions*',
+                  head: 'feature',
+                  base: 'develop'
+                });
+                
+                console.log(`✅ PR успешно создан: ${newPR.data.html_url}`);
+              } else {
+                console.log(`ℹ️ PR уже существует: ${existingPRs[0].html_url}`);
+              }
+            } catch (error) {
+              console.log("❌ ОШИБКА:", error.message);
+              throw error;
             }

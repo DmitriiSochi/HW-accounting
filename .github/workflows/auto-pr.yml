@@ -1,5 +1,10 @@
 name: Auto Create PR after feature push
 
+permissions:
+  contents: write      # Право на запись кода
+  pull-requests: write # Право на создание PR
+  repository-projects: write # Право на проекты
+
 on:
   push:
     branches: [feature]

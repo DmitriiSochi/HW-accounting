@@ -40,13 +40,13 @@ jobs:
             // 2. Если PR ещё нет - создаём новый
             if (existingPRs.length === 0) {
               const newPR = await github.rest.pulls.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: '🤖 Auto PR: develop → main',  // Заголовок
-                body: 'Автоматически созданный PR\n\n' +  // Описание
-                      '✅ Проверки пройдены:\n' +
-                      '- index.html существует',
-                head: 'feature',  // ОТКУДА
-                base: 'develop'       // КУДА
-              });
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🤖 Auto PR: develop → main',  // Заголовок
+              body: 'Автоматически созданный PR\n\n' +  // Описание
+                    '✅ Проверки пройдены:\n' +
+                    '- index.html существует',
+              head: 'feature',  // ОТКУДА
+              base: 'develop'       // КУДА
+             });
 

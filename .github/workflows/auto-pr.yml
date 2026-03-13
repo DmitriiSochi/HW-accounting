@@ -30,23 +30,23 @@ jobs:
         with:
           script: |
             const { data: existingPRs } = await github.rest.pulls.list({
-            owner: context.repo.owner,        // Владелец (ты)
-            repo: context.repo.repo,           // Название репозитория
-            state: 'open',                      // Только открытые
-            head: 'feature',                     // Из какой ветки
-            base: 'develop'                          // В какую ветку
-          });
+              owner: context.repo.owner,        // Владелец (ты)
+              repo: context.repo.repo,           // Название репозитория
+              state: 'open',                      // Только открытые
+              head: 'feature',                     // Из какой ветки
+              base: 'develop'                          // В какую ветку
+            });
 
             // 2. Если PR ещё нет - создаём новый
             if (existingPRs.length === 0) {
               const newPR = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🤖 Auto PR: develop → main',  // Заголовок
-              body: 'Автоматически созданный PR\n\n' +  // Описание
-                    '✅ Проверки пройдены:\n' +
-                    '- index.html существует',
-              head: 'feature',  // ОТКУДА
-              base: 'develop'       // КУДА
-             });
-
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🤖 Auto PR: feature → develop',  // Заголовок
+                body: 'Автоматически созданный PR\n\n' +  // Описание
+                      '✅ Проверки пройдены:\n' +
+                      '- index.html существует',
+                head: 'feature',  // ОТКУДА
+                base: 'develop'       // КУДА
+              });  // ← ЗДЕСЬ БЫЛА ОШИБКА! Теперь правильно: });
+            }
